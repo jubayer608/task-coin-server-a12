@@ -631,6 +631,22 @@ app.delete("/admin/tasks/:id", async (req, res) => {
   }
 });
 
+// Get Top 6 Workers
+app.get("/workers/top", async (req, res) => {
+  try {
+    const topWorkers = await usersCollection
+      .find({ role: "worker" })
+      .sort({ coins: -1 }) // coins descending
+      .limit(6)
+      .toArray();
+    res.send(topWorkers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Failed to fetch top workers" });
+  }
+});
+
+
 // Get admin stats
 app.get("/admin/stats", async (req, res) => {
   try {
