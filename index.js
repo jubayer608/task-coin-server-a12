@@ -388,33 +388,33 @@ app.get("/worker/stats/:email", async (req, res) => {
   res.send({ totalSubmissions, pendingSubmissions, totalEarning });
 });
 
-// Worker approved submissions + approved withdrawals combined
+// Backend: Get worker's approved submissions (only buyer approved)
 app.get("/worker/submissions/approved/:email", async (req, res) => {
   const email = req.params.email;
 
-  const approvedSubmissions = await submissionsCollection.find({ worker_email: email, status: "approved" }).toArray();
-  const approvedWithdrawals = await withdrawalsCollection.find({ worker_email: email, status: "approved" }).toArray();
+  try {
+    
+    const approvedSubmissions = await submissionsCollection
+      .find({ worker_email: email, status: "approve" })
+      .toArray();
 
-  // Merge arrays for frontend display
-  const combined = [
-    ...approvedSubmissions.map(s => ({
+    // Map to frontend-friendly format
+    const formatted = approvedSubmissions.map(s => ({
       _id: s._id,
-      task_title: s.task_title || s.task_name,
+      task_title: s.task_title || s.task_name || "N/A",
       payable_amount: Number(s.payable_amount || 0),
-      buyer_name: s.buyer_name || s.Buyer_name || "N/A",
-      status: s.status
-    })),
-    ...approvedWithdrawals.map(w => ({
-      _id: w._id,
-      task_title: "Withdrawal: " + w.payment_system,
-      payable_amount: Number(w.withdrawal_amount || 0),
-      buyer_name: "Self",
-      status: w.status
-    }))
-  ];
+      Buyer_email: s.Buyer_email || "Unknown",
+      status: s.status,
+      createdAt: s.createdAt || null,
+    }));
 
-  res.send(combined);
+    res.send(formatted);
+  } catch (error) {
+    console.error("Error fetching approved submissions:", error);
+    res.status(500).send({ error: "Failed to fetch approved submissions" });
+  }
 });
+
 
 
 
