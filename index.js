@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-
+const admin = require("firebase-admin");
 // Load environment variables from .env file
 dotenv.config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -16,8 +16,9 @@ app.use(express.json());
 
 
 
-const admin = require("firebase-admin");
-const serviceAccount = require("./firebase_service_key.json");
+
+const decodedKey = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8');
+const serviceAccount = JSON.parse(decodedKey);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -51,6 +52,68 @@ async function run() {
     const withdrawalsCollection = db.collection("withdrawals");
     const notificationsCollection=db.collection("notifications")
    
+
+    // Middleware to verify Firebase JWT
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).send({ message: "Unauthorized" });
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken; // contains uid, email, etc.
+    next();
+  } catch (err) {
+    console.error(err);
+    return res.status(401).send({ message: "Invalid token" });
+  }
+};
+
+// Admin middleware
+const adminVerify = async (req, res, next) => {
+  try {
+    const userEmail = req.user.email;
+    const user = await usersCollection.findOne({ email: userEmail });
+    if (user?.role !== "admin") {
+      return res.status(403).send({ message: "Forbidden: Admins only" });
+    }
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error" });
+  }
+};
+
+// Buyer middleware
+const buyerVerify = async (req, res, next) => {
+  try {
+    const userEmail = req.user.email;
+    const user = await usersCollection.findOne({ email: userEmail });
+    if (user?.role !== "buyer") {
+      return res.status(403).send({ message: "Forbidden: Buyers only" });
+    }
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error" });
+  }
+};
+
+// Worker middleware
+const workerVerify = async (req, res, next) => {
+  try {
+    const userEmail = req.user.email;
+    const user = await usersCollection.findOne({ email: userEmail });
+    if (user?.role !== "worker") {
+      return res.status(403).send({ message: "Forbidden: Workers only" });
+    }
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error" });
+  }
+};
+
 
  // Create/Register User
 app.post("/users", async (req, res) => {
