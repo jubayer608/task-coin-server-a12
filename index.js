@@ -16,6 +16,13 @@ app.use(express.json());
 
 
 
+const admin = require("firebase-admin");
+const serviceAccount = require("./firebase_service_key.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.akopiuj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
