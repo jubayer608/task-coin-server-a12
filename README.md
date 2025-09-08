@@ -74,7 +74,7 @@ Each middleware validates JWT + checks user role from DB.
 
 ```bash
 # Clone backend repo
-git clone https://github.com/your-username/taskcoin-server.git
+git clone https://github.com/jubayer608/task-coin-server-a12.git
 
 # Navigate to project
 cd taskcoin-server
@@ -85,9 +85,11 @@ npm install
 # Create .env file and add:
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
-FIREBASE_SERVICE_KEY=your_base64_encoded_key
+FB_SERVICE_KEY=your_base64_encoded_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
-JWT_SECRET=your_jwt_secret
+DB_USER=
+DB_PASS=
+
 
 # Start server
-npm run dev
+nodmon index.js
