@@ -113,11 +113,9 @@ async function run() {
       await notificationsCollection.insertOne(notification);
     };
 
-
     // =============================
     // 👩‍💻 User APIs
     // =============================
-
     // Create/Register User (PUBLIC ROUTE)
     app.post("/users", async (req, res) => {
       try {
