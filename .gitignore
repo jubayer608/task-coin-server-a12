@@ -1,3 +1,7 @@
 node_modules
 .env
+<<<<<<< HEAD
 firebase-admin-key.json
+=======
+firebase_service_key.json
+>>>>>>> 3faf674ebaeeae2a77d534c0899b76161670bb65

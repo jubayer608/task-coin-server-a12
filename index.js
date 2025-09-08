@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require("firebase-admin");
 
-// Load environment variables from .env file FIRST
+// Load environment variables from .env file First
 dotenv.config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -52,7 +52,6 @@ async function run() {
     const verifyToken = async (req, res, next) => {
       const authHeader = req.headers.authorization;
       if (!authHeader) return res.status(401).send({ message: "Unauthorized" });
-
       const token = authHeader.split(" ")[1];
       try {
         const decodedToken = await admin.auth().verifyIdToken(token);
