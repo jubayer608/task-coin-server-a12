@@ -36,7 +36,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server
-    await client.connect();
+    // await client.connect();
 
     const db = client.db("taskCoinDB");
     const usersCollection = db.collection("users");
@@ -134,6 +134,60 @@ async function run() {
       }
     });
 
+     // ✅ ADD THIS NEW ROUTE HERE (Google Login/Register) - NO AUTHENTICATION NEEDED
+    app.post("/auth/google", async (req, res) => {
+      try {
+        const { name, email, photoURL } = req.body;
+
+        if (!email) {
+          return res.status(400).send({ success: false, message: "Email is required" });
+        }
+
+        // Check if user already exists
+        let user = await usersCollection.findOne({ email });
+
+        if (user) {
+          // User exists - return existing user
+          return res.status(200).send({
+            success: true,
+            message: "Login successful",
+            user: user,
+            isNewUser: false
+          });
+        }
+
+        // New user - create account
+        const defaultRole = "buyer";
+        const defaultCoin = defaultRole === "buyer" ? 50 : 10;
+
+        const newUser = {
+          name,
+          email,
+          photoURL,
+          role: defaultRole,
+          coin: defaultCoin,
+          createdAt: new Date()
+        };
+
+        const result = await usersCollection.insertOne(newUser);
+        const insertedUser = await usersCollection.findOne({ _id: result.insertedId });
+
+        return res.status(201).send({
+          success: true,
+          message: "Account created successfully",
+          user: insertedUser,
+          isNewUser: true
+        });
+
+      } catch (err) {
+        console.error("Google auth error:", err);
+        return res.status(500).send({ 
+          success: false,
+          message: "Server error during authentication" 
+        });
+      }
+    });
+
     // Get user by email (AUTHENTICATED)
     app.get("/users/:email", verifyToken, async (req, res) => {
       try {
@@ -146,6 +200,8 @@ async function run() {
         res.status(500).send({ message: "Server error while fetching user" });
       }
     });
+
+    
 
     // =============================
     // 💸 Buyer APIs
@@ -587,8 +643,8 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
